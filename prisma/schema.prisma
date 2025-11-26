@@ -1,0 +1,53 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String       @id @default(uuid())
+  email         String       @unique
+  password      String?      // Optional if using OAuth (Google/GitHub), required for Email/Pass
+  name          String?
+  createdAt     DateTime     @default(now())
+  connections   Connection[]
+}
+
+model Connection {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Fields from your CSV
+  firstName   String
+  lastName    String
+  fullName    String?  // Helper for display
+  email       String?
+  company     String?
+  position    String?
+  profileUrl  String?
+  connectedOn DateTime?
+  
+  // Geolocation Data (Added after processing)
+  latitude    Float?
+  longitude   Float?
+  city        String?
+  country     String?
+  
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+}
+
+model LocationCache {
+  companyName String   @id @unique
+  latitude    Float
+  longitude   Float
+  city        String?
+  country     String?
+  updatedAt   DateTime @updatedAt
+}
