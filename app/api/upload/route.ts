@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
 
     const text = await file.text();
     
-    // FIX: LinkedIn CSVs have 3 lines of metadata at the top.
+    // LinkedIn CSVs have 3 lines of metadata at the top.
     // We remove them so PapaParse reads the actual header row.
     const cleanText = text.split('\n').slice(3).join('\n');
     
@@ -28,32 +28,60 @@ export async function POST(req: NextRequest) {
     });
 
     let count = 0;
+    let skipped = 0;
 
     // Process each row
-    for (const row of data as any[]) {
-      // Check for required fields (First Name is essential, Company is useful for map)
-      if (row['First Name']) {
-        await prisma.connection.create({
-          data: {
-            userId: demoUser.id,
-            firstName: row['First Name'],
-            lastName: row['Last Name'] || '',
-            fullName: `${row['First Name']} ${row['Last Name'] || ''}`.trim(),
-            company: row['Company'] || null,
-            position: row['Position'] || null,
-            profileUrl: row['URL'] || null,
-            email: row['Email Address'] || null,
-            connectedOn: row['Connected On'] ? new Date(row['Connected On']) : null,
-          }
-        });
-        count++;
+    for (const row of data as Record<string, string>[]) {
+      // Check for required fields
+      if (!row['First Name']) continue;
+
+      const firstName = row['First Name'];
+      const lastName = row['Last Name'] || '';
+      const profileUrl = row['URL'] || null;
+
+      // Check if this connection already exists (by URL or name + company combo)
+      const existingConnection = await prisma.connection.findFirst({
+        where: {
+          userId: demoUser.id,
+          OR: [
+            { profileUrl: profileUrl || undefined },
+            {
+              AND: [
+                { firstName },
+                { lastName },
+                { company: row['Company'] || null }
+              ]
+            }
+          ]
+        }
+      });
+
+      if (existingConnection) {
+        skipped++;
+        continue;
       }
+
+      await prisma.connection.create({
+        data: {
+          userId: demoUser.id,
+          firstName,
+          lastName,
+          fullName: `${firstName} ${lastName}`.trim(),
+          company: row['Company'] || null,
+          position: row['Position'] || null,
+          profileUrl,
+          email: row['Email Address'] || null,
+          connectedOn: row['Connected On'] ? new Date(row['Connected On']) : null,
+        }
+      });
+      count++;
     }
 
     return NextResponse.json({ 
       success: true, 
       count, 
-      message: `Successfully imported ${count} connections` 
+      skipped,
+      message: `Successfully imported ${count} connections${skipped > 0 ? ` (${skipped} duplicates skipped)` : ''}` 
     });
 
   } catch (error) {

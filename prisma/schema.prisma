@@ -39,6 +39,10 @@ model Connection {
   city        String?
   country     String?
   
+  // User-added metadata
+  tags        String?   // Comma-separated tags like "recruiter,friend,mentor"
+  notes       String?   // Private notes about this connection
+  
   createdAt   DateTime @default(now())
 
   @@index([userId])

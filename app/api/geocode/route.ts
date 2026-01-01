@@ -4,6 +4,19 @@ import { prisma } from '@/lib/prisma';
 // Simple delay to respect API rate limits
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+// Add random jitter to coordinates so connections at the same company spread out
+// Jitter radius is approximately 50-100km
+function addJitter(lat: number, lon: number): { lat: number; lon: number } {
+  const jitterRadius = 0.5; // ~50km in degrees
+  const randomAngle = Math.random() * 2 * Math.PI;
+  const randomRadius = Math.random() * jitterRadius;
+  
+  return {
+    lat: lat + randomRadius * Math.cos(randomAngle),
+    lon: lon + randomRadius * Math.sin(randomAngle),
+  };
+}
+
 export async function GET() {
   try {
     // 1. Find connections that have a company but NO coordinates yet
@@ -16,7 +29,7 @@ export async function GET() {
     });
 
     if (connectionsToGeocode.length === 0) {
-      return NextResponse.json({ message: 'No pending connections to geocode.' });
+      return NextResponse.json({ message: 'No pending connections to geocode.', processed: 0, updated: 0 });
     }
 
     let updatedCount = 0;
@@ -30,11 +43,14 @@ export async function GET() {
       });
 
       if (cached) {
+        // Apply jitter so multiple people at same company don't overlap
+        const jittered = addJitter(cached.latitude, cached.longitude);
+        
         await prisma.connection.update({
           where: { id: conn.id },
           data: {
-            latitude: cached.latitude,
-            longitude: cached.longitude,
+            latitude: jittered.lat,
+            longitude: jittered.lon,
             city: cached.city,
             country: cached.country,
           },
@@ -44,41 +60,42 @@ export async function GET() {
       }
 
       // If not cached, fetch from external API (OpenStreetMap Nominatim - Free)
-      // Note: In production, use a paid API like Geoapify or Google Maps
       try {
         const query = encodeURIComponent(conn.company);
         const res = await fetch(
           `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`,
-          { headers: { 'User-Agent': 'LinkedinVizHackathon/1.0' } }
+          { headers: { 'User-Agent': 'Relnodes/1.0 (Network Visualization App)' } }
         );
         
         const data = await res.json();
 
         if (data && data.length > 0) {
           const result = data[0];
-          const lat = parseFloat(result.lat);
-          const lon = parseFloat(result.lon);
+          const baseLat = parseFloat(result.lat);
+          const baseLon = parseFloat(result.lon);
           
-        // Save to Cache (Use upsert to prevent unique constraint errors)
-        await prisma.locationCache.upsert({
-        where: { companyName: conn.company },
-        update: {}, // If exists, do nothing
-        create: {
-            companyName: conn.company,
-            latitude: lat,
-            longitude: lon,
-            city: result.display_name.split(',')[0],
-            country: result.display_name.split(',').pop()?.trim(),
-        },
-        });
+          // Save to Cache with base coordinates (no jitter)
+          await prisma.locationCache.upsert({
+            where: { companyName: conn.company },
+            update: {}, // If exists, do nothing
+            create: {
+              companyName: conn.company,
+              latitude: baseLat,
+              longitude: baseLon,
+              city: result.display_name.split(',')[0],
+              country: result.display_name.split(',').pop()?.trim(),
+            },
+          });
 
+          // Apply jitter for the individual connection
+          const jittered = addJitter(baseLat, baseLon);
 
           // Update Connection
           await prisma.connection.update({
             where: { id: conn.id },
             data: {
-              latitude: lat,
-              longitude: lon,
+              latitude: jittered.lat,
+              longitude: jittered.lon,
               city: result.display_name.split(',')[0],
               country: result.display_name.split(',').pop()?.trim(),
             },
@@ -98,7 +115,7 @@ export async function GET() {
       success: true, 
       processed: connectionsToGeocode.length,
       updated: updatedCount,
-      message: `Processed batch of ${connectionsToGeocode.length} connections. Refresh to continue.`
+      message: `Processed batch of ${connectionsToGeocode.length} connections.`
     });
 
   } catch (error) {
