@@ -3,19 +3,18 @@
 import { useState, useCallback, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, FileText, CheckCircle, AlertCircle, Loader2, ArrowRight, Info, Globe, Linkedin } from 'lucide-react';
+import { Upload, FileText, CheckCircle, AlertCircle, Loader2, ArrowRight, Info, Linkedin } from 'lucide-react';
 import Navigation from '@/components/Navigation';
-
-type UploadState = 'idle' | 'uploading' | 'geocoding' | 'success' | 'error';
 
 export default function UploadPage() {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
-  const [uploadState, setUploadState] = useState<UploadState>('idle');
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
   const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
   const [uploadedCount, setUploadedCount] = useState(0);
-  const [geocodeProgress, setGeocodeProgress] = useState({ processed: 0, total: 0 });
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -35,51 +34,28 @@ export default function UploadPage() {
     const droppedFile = e.dataTransfer.files?.[0];
     if (droppedFile && droppedFile.name.endsWith('.csv')) {
       setFile(droppedFile);
+      setError('');
     } else {
-      setMessage('Please upload a CSV file');
+      setError('Please upload a CSV file');
     }
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
       setFile(e.target.files[0]);
-      setMessage('');
+      setError('');
     }
-  };
-
-  const runGeocoding = async () => {
-    setUploadState('geocoding');
-    let totalProcessed = 0;
-    let hasMore = true;
-    
-    while (hasMore) {
-      try {
-        const res = await fetch('/api/geocode');
-        const data = await res.json();
-        
-        if (data.processed === 0 || data.message?.includes('No pending')) {
-          hasMore = false;
-        } else {
-          totalProcessed += data.updated || 0;
-          setGeocodeProgress({ processed: totalProcessed, total: uploadedCount });
-        }
-      } catch {
-        hasMore = false;
-      }
-    }
-    
-    setGeocodeProgress({ processed: totalProcessed, total: uploadedCount });
-    setUploadState('success');
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!file) {
-      setMessage('Please select a file first.');
+      setError('Please select a file first.');
       return;
     }
 
-    setUploadState('uploading');
+    setIsUploading(true);
+    setError('');
     setMessage('');
 
     const formData = new FormData();
@@ -98,15 +74,18 @@ export default function UploadPage() {
       }
 
       setUploadedCount(result.count || 0);
-      setMessage(`Uploaded ${result.count} connections!`);
+      setUploadSuccess(true);
+      setMessage(`Successfully imported ${result.count} connections!`);
       
-      // Start geocoding
-      await runGeocoding();
+      // Redirect to dashboard after a brief delay to show success
+      setTimeout(() => {
+        router.push('/dashboard?geocoding=true');
+      }, 1500);
 
-    } catch (error: unknown) {
-      setUploadState('error');
-      const errorMessage = error instanceof Error ? error.message : 'Upload failed';
-      setMessage(errorMessage);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Upload failed';
+      setError(errorMessage);
+      setIsUploading(false);
     }
   };
 
@@ -166,7 +145,7 @@ export default function UploadPage() {
                 <div className="mt-6 p-3 rounded-lg bg-[#0a66c2]/10 flex items-start gap-3">
                   <Info className="w-4 h-4 text-[#70b5f9] flex-shrink-0 mt-0.5" />
                   <p className="text-sm text-[#70b5f9]">
-                    LinkedIn may take a few minutes to prepare your data export.
+                    After upload, you&apos;ll be taken to your dashboard where locations will be mapped automatically in the background.
                   </p>
                 </div>
               </motion.div>
@@ -191,6 +170,7 @@ export default function UploadPage() {
                       ? 'ring-2 ring-[#0a66c2] bg-[#0a66c2]/5' 
                       : 'hover:bg-[#38434f]/20'}
                     ${file ? 'ring-2 ring-[#057642]' : ''}
+                    ${uploadSuccess ? 'ring-2 ring-[#057642] bg-[#057642]/5' : ''}
                   `}
                 >
                   <input
@@ -198,11 +178,45 @@ export default function UploadPage() {
                     accept=".csv"
                     onChange={handleFileChange}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    disabled={uploadState !== 'idle'}
+                    disabled={isUploading || uploadSuccess}
                   />
                   
                   <AnimatePresence mode="wait">
-                    {!file ? (
+                    {uploadSuccess ? (
+                      <motion.div
+                        key="success"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                      >
+                        <div className="w-16 h-16 rounded-full bg-[#057642]/20 flex items-center justify-center mx-auto mb-4">
+                          <CheckCircle className="w-8 h-8 text-[#057642]" />
+                        </div>
+                        <p className="text-lg font-medium text-[#057642] mb-2">
+                          {uploadedCount} connections imported!
+                        </p>
+                        <p className="text-sm text-[#b0b0b0]">
+                          Redirecting to dashboard...
+                        </p>
+                      </motion.div>
+                    ) : isUploading ? (
+                      <motion.div
+                        key="uploading"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                      >
+                        <div className="w-16 h-16 rounded-full bg-[#0a66c2]/20 flex items-center justify-center mx-auto mb-4">
+                          <Loader2 className="w-8 h-8 text-[#0a66c2] animate-spin" />
+                        </div>
+                        <p className="text-lg font-medium text-white mb-2">
+                          Processing your connections...
+                        </p>
+                        <p className="text-sm text-[#b0b0b0]">
+                          This will only take a moment
+                        </p>
+                      </motion.div>
+                    ) : !file ? (
                       <motion.div
                         key="empty"
                         initial={{ opacity: 0 }}
@@ -240,102 +254,58 @@ export default function UploadPage() {
                   </AnimatePresence>
                 </div>
 
-                {/* Progress States */}
-                <AnimatePresence>
-                  {uploadState !== 'idle' && uploadState !== 'error' && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="mt-6 card-linkedin p-6"
-                    >
-                      <div className="space-y-4">
-                        {/* Upload step */}
-                        <div className="flex items-center gap-3">
-                          {uploadState === 'uploading' ? (
-                            <Loader2 className="w-5 h-5 text-[#0a66c2] animate-spin" />
-                          ) : (
-                            <CheckCircle className="w-5 h-5 text-[#057642]" />
-                          )}
-                          <span className={uploadState === 'uploading' ? 'text-white' : 'text-[#b0b0b0]'}>
-                            Uploading and parsing CSV...
-                          </span>
-                        </div>
-
-                        {/* Geocoding step */}
-                        <div className="flex items-center gap-3">
-                          {uploadState === 'geocoding' ? (
-                            <Loader2 className="w-5 h-5 text-[#0a66c2] animate-spin" />
-                          ) : uploadState === 'success' ? (
-                            <CheckCircle className="w-5 h-5 text-[#057642]" />
-                          ) : (
-                            <div className="w-5 h-5 rounded-full border-2 border-[#38434f]" />
-                          )}
-                          <span className={uploadState === 'geocoding' ? 'text-white' : 'text-[#b0b0b0]'}>
-                            {uploadState === 'geocoding' 
-                              ? `Mapping locations... (${geocodeProgress.processed} done)`
-                              : uploadState === 'success'
-                              ? `Mapped ${geocodeProgress.processed} connections`
-                              : 'Mapping locations...'}
-                          </span>
-                        </div>
-
-                        {/* Success */}
-                        {uploadState === 'success' && (
-                          <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="pt-4 border-t border-[#38434f]"
-                          >
-                            <div className="flex items-center gap-2 text-[#057642] mb-4">
-                              <Globe className="w-5 h-5" />
-                              <span className="font-medium">Your network is ready!</span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => router.push('/dashboard')}
-                              className="btn-linkedin w-full flex items-center justify-center gap-2 group"
-                            >
-                              View Your Network
-                              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                            </button>
-                          </motion.div>
-                        )}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
                 {/* Error State */}
-                {uploadState === 'error' && (
+                {error && (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="mt-6 p-4 rounded-lg bg-[#b24020]/10 border border-[#b24020]/20 flex items-center gap-3"
                   >
                     <AlertCircle className="w-5 h-5 text-[#b24020] flex-shrink-0" />
-                    <span className="text-[#b24020]">{message}</span>
+                    <span className="text-[#b24020]">{error}</span>
+                  </motion.div>
+                )}
+
+                {/* Success Message */}
+                {message && !error && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-6 p-4 rounded-lg bg-[#057642]/10 border border-[#057642]/20 flex items-center gap-3"
+                  >
+                    <CheckCircle className="w-5 h-5 text-[#057642] flex-shrink-0" />
+                    <span className="text-[#057642]">{message}</span>
                   </motion.div>
                 )}
 
                 {/* Submit Button */}
-                {uploadState === 'idle' && (
+                {!uploadSuccess && (
                   <motion.button
                     type="submit"
-                    disabled={!file}
-                    whileHover={{ scale: file ? 1.02 : 1 }}
-                    whileTap={{ scale: file ? 0.98 : 1 }}
-                    className="mt-6 btn-linkedin w-full flex items-center justify-center gap-2"
+                    disabled={!file || isUploading}
+                    whileHover={{ scale: file && !isUploading ? 1.02 : 1 }}
+                    whileTap={{ scale: file && !isUploading ? 0.98 : 1 }}
+                    className="mt-6 btn-linkedin w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Upload className="w-5 h-5" />
-                    Upload & Process
+                    {isUploading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-5 h-5" />
+                        Upload & Continue
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
                   </motion.button>
                 )}
               </form>
 
               {/* Privacy Note */}
               <p className="text-center text-sm text-[#666666] mt-6">
-                🔒 Your data is processed locally and never shared.
+                🔒 Your data is processed securely and never shared.
               </p>
             </motion.div>
           </div>

@@ -1,27 +1,40 @@
 import { prisma } from '@/lib/prisma';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { redirect } from 'next/navigation';
 import DashboardClient from './DashboardClient'; 
 
 export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
-  // 1. Fetch all connections (including ungeocodded ones for editing)
+  // Check authentication
+  const session = await getServerSession(authOptions);
+  
+  if (!session?.user?.id) {
+    redirect('/login?callbackUrl=/dashboard');
+  }
+
+  // Fetch all connections for this user
   const connections = await prisma.connection.findMany({
+    where: { userId: session.user.id },
     orderBy: { createdAt: 'desc' },
   });
 
-  // 2. Filter geocoded ones for the globe
+  // Filter geocoded ones for the globe
   const geocodedConnections = connections.filter(c => c.latitude !== null);
 
-  // 3. Compute Stats server-side
+  // Compute Stats server-side
   const total = connections.length;
   const geocoded = geocodedConnections.length;
   const pending = total - geocoded;
   
-  // Count companies
+  // Count companies (excluding null/empty/Unknown)
   const companyCounts: Record<string, number> = {};
   connections.forEach(c => {
-    const name = c.company || 'Unknown';
-    companyCounts[name] = (companyCounts[name] || 0) + 1;
+    // Only count valid company names
+    if (c.company && c.company.trim() !== '' && c.company.toLowerCase() !== 'unknown') {
+      companyCounts[c.company] = (companyCounts[c.company] || 0) + 1;
+    }
   });
 
   // Sort and get top 8
@@ -34,7 +47,9 @@ export default async function DashboardPage() {
   const countryCounts: Record<string, number> = {};
   geocodedConnections.forEach(c => {
     const country = c.country || 'Unknown';
-    countryCounts[country] = (countryCounts[country] || 0) + 1;
+    if (country !== 'Unknown') {
+      countryCounts[country] = (countryCounts[country] || 0) + 1;
+    }
   });
 
   const topCountries = Object.entries(countryCounts)

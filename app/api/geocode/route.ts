@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 // Simple delay to respect API rate limits
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Add random jitter to coordinates so connections at the same company spread out
-// Jitter radius is approximately 50-100km
 function addJitter(lat: number, lon: number): { lat: number; lon: number } {
   const jitterRadius = 0.5; // ~50km in degrees
   const randomAngle = Math.random() * 2 * Math.PI;
@@ -19,9 +20,18 @@ function addJitter(lat: number, lon: number): { lat: number; lon: number } {
 
 export async function GET() {
   try {
-    // 1. Find connections that have a company but NO coordinates yet
+    // Check authentication
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const userId = session.user.id;
+
+    // Find connections that have a company but NO coordinates yet (for this user only)
     const connectionsToGeocode = await prisma.connection.findMany({
       where: {
+        userId,
         company: { not: null },
         latitude: null,
       },
@@ -77,7 +87,7 @@ export async function GET() {
           // Save to Cache with base coordinates (no jitter)
           await prisma.locationCache.upsert({
             where: { companyName: conn.company },
-            update: {}, // If exists, do nothing
+            update: {},
             create: {
               companyName: conn.company,
               latitude: baseLat,

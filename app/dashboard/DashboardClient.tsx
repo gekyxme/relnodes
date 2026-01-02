@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import GlobeViz from '@/components/GlobeViz';
 import CityAutocomplete from '@/components/CityAutocomplete';
+import GeocodingProgress from '@/components/GeocodingProgress';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, MapPin, Building2, User, ExternalLink, Search, 
@@ -369,6 +370,9 @@ function AddConnectionModal({
 
 export default function DashboardClient({ connections, allConnections, stats }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const autoStartGeocoding = searchParams.get('geocoding') === 'true';
+  
   const [selectedNode, setSelectedNode] = useState<Connection | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showConnectionsList, setShowConnectionsList] = useState(false);
@@ -382,6 +386,7 @@ export default function DashboardClient({ connections, allConnections, stats }: 
   const [companySearch, setCompanySearch] = useState('');
   const [currentTags, setCurrentTags] = useState<string[]>([]);
   const [currentNotes, setCurrentNotes] = useState('');
+  const [geocodingDone, setGeocodingDone] = useState(false);
 
   // Show empty state if no connections
   if (allConnections.length === 0) {
@@ -518,15 +523,6 @@ export default function DashboardClient({ connections, allConnections, stats }: 
     }
   };
 
-  const runGeocoding = async () => {
-    try {
-      await fetch('/api/geocode');
-      router.refresh();
-    } catch (error) {
-      console.error('Geocoding failed:', error);
-    }
-  };
-
   const getInitials = (firstName: string, lastName: string) => {
     return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
   };
@@ -589,18 +585,27 @@ export default function DashboardClient({ connections, allConnections, stats }: 
             </div>
           </div>
           
-          {/* Pending Alert */}
+          {/* Pending Info */}
           {stats.pending > 0 && (
-            <button
-              onClick={runGeocoding}
-              className="mt-3 w-full flex items-center gap-3 p-3 rounded-lg bg-[#b24020]/10 border border-[#b24020]/20 hover:bg-[#b24020]/20 transition-colors group"
-            >
-              <AlertCircle className="w-4 h-4 text-[#b24020]" />
-              <span className="text-sm text-[#b24020] flex-1 text-left">
-                {stats.pending} need location
+            <div className={`mt-3 flex items-center gap-3 p-3 rounded-lg ${
+              geocodingDone 
+                ? 'bg-[#b24020]/10 border border-[#b24020]/20' 
+                : 'bg-[#0a66c2]/10 border border-[#0a66c2]/20'
+            }`}>
+              {geocodingDone ? (
+                <AlertCircle className="w-4 h-4 text-[#b24020]" />
+              ) : (
+                <MapPin className="w-4 h-4 text-[#0a66c2]" />
+              )}
+              <span className={`text-sm flex-1 text-left ${
+                geocodingDone ? 'text-[#e57373]' : 'text-[#70b5f9]'
+              }`}>
+                {geocodingDone 
+                  ? `${stats.pending} couldn't be mapped`
+                  : `${stats.pending} pending mapping`
+                }
               </span>
-              <RefreshCw className="w-4 h-4 text-[#b24020] group-hover:animate-spin" />
-            </button>
+            </div>
           )}
         </div>
 
@@ -894,22 +899,25 @@ export default function DashboardClient({ connections, allConnections, stats }: 
       </AnimatePresence>
 
       {/* REFERRAL FINDER PANEL */}
-      <AnimatePresence>
+      <AnimatePresence mode="sync">
         {showReferralFinder && (
           <>
             <motion.div
+              key="referral-backdrop"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
               onClick={() => setShowReferralFinder(false)}
               className="absolute inset-0 bg-black/50 backdrop-blur-sm z-30"
             />
             
             <motion.div
+              key="referral-panel"
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 250, mass: 0.8 }}
               className="absolute right-0 top-0 bottom-0 w-[450px] bg-[#1d2226] border-l border-[#38434f] z-40 flex flex-col"
             >
               {/* Header */}
@@ -1014,22 +1022,25 @@ export default function DashboardClient({ connections, allConnections, stats }: 
       </AnimatePresence>
 
       {/* CONNECTIONS LIST PANEL */}
-      <AnimatePresence>
+      <AnimatePresence mode="sync">
         {showConnectionsList && (
           <>
             <motion.div
+              key="connections-backdrop"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
               onClick={() => setShowConnectionsList(false)}
               className="absolute inset-0 bg-black/50 backdrop-blur-sm z-30"
             />
             
             <motion.div
+              key="connections-panel"
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 250, mass: 0.8 }}
               className="absolute right-0 top-0 bottom-0 w-[450px] bg-[#1d2226] border-l border-[#38434f] z-40 flex flex-col"
             >
               {/* Header */}
@@ -1131,6 +1142,16 @@ export default function DashboardClient({ connections, allConnections, stats }: 
           </>
         )}
       </AnimatePresence>
+
+      {/* Background Geocoding Progress */}
+      <GeocodingProgress
+        pendingCount={stats.pending}
+        totalCount={stats.total}
+        autoStart={autoStartGeocoding}
+        onComplete={() => {
+          setGeocodingDone(true);
+        }}
+      />
     </div>
   );
 }

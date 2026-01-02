@@ -1,14 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import Papa from 'papaparse';
 
 export async function POST(req: NextRequest) {
   try {
+    // Check authentication
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const formData = await req.formData();
     const file = formData.get('file') as File;
 
     if (!file) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
+    }
+
+    // Validate file type
+    if (!file.name.endsWith('.csv')) {
+      return NextResponse.json({ error: 'File must be a CSV' }, { status: 400 });
+    }
+
+    // Limit file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      return NextResponse.json({ error: 'File too large (max 5MB)' }, { status: 400 });
     }
 
     const text = await file.text();
@@ -20,13 +38,7 @@ export async function POST(req: NextRequest) {
     // Parse CSV
     const { data } = Papa.parse(cleanText, { header: true, skipEmptyLines: true });
     
-    // Create or get the demo user
-    const demoUser = await prisma.user.upsert({
-      where: { email: 'demo@example.com' },
-      update: {},
-      create: { email: 'demo@example.com', name: 'Demo User' }
-    });
-
+    const userId = session.user.id;
     let count = 0;
     let skipped = 0;
 
@@ -35,21 +47,21 @@ export async function POST(req: NextRequest) {
       // Check for required fields
       if (!row['First Name']) continue;
 
-      const firstName = row['First Name'];
-      const lastName = row['Last Name'] || '';
-      const profileUrl = row['URL'] || null;
+      const firstName = row['First Name'].trim();
+      const lastName = (row['Last Name'] || '').trim();
+      const profileUrl = row['URL']?.trim() || null;
 
-      // Check if this connection already exists (by URL or name + company combo)
+      // Check if this connection already exists for this user
       const existingConnection = await prisma.connection.findFirst({
         where: {
-          userId: demoUser.id,
+          userId,
           OR: [
-            { profileUrl: profileUrl || undefined },
+            ...(profileUrl ? [{ profileUrl }] : []),
             {
               AND: [
                 { firstName },
                 { lastName },
-                { company: row['Company'] || null }
+                { company: row['Company']?.trim() || null }
               ]
             }
           ]
@@ -63,14 +75,14 @@ export async function POST(req: NextRequest) {
 
       await prisma.connection.create({
         data: {
-          userId: demoUser.id,
+          userId,
           firstName,
           lastName,
           fullName: `${firstName} ${lastName}`.trim(),
-          company: row['Company'] || null,
-          position: row['Position'] || null,
+          company: row['Company']?.trim() || null,
+          position: row['Position']?.trim() || null,
           profileUrl,
-          email: row['Email Address'] || null,
+          email: row['Email Address']?.trim() || null,
           connectedOn: row['Connected On'] ? new Date(row['Connected On']) : null,
         }
       });

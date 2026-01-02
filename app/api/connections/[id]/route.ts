@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 // Update a connection's location or details
 export async function PATCH(
@@ -7,9 +9,29 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Check authentication
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { id } = await params;
     const body = await req.json();
     
+    // Verify the connection belongs to the user
+    const existingConnection = await prisma.connection.findUnique({
+      where: { id },
+      select: { userId: true },
+    });
+
+    if (!existingConnection) {
+      return NextResponse.json({ error: 'Connection not found' }, { status: 404 });
+    }
+
+    if (existingConnection.userId !== session.user.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const { latitude, longitude, city, country, tags, notes } = body;
     
     const updated = await prisma.connection.update({
@@ -37,8 +59,28 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Check authentication
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { id } = await params;
     
+    // Verify the connection belongs to the user
+    const existingConnection = await prisma.connection.findUnique({
+      where: { id },
+      select: { userId: true },
+    });
+
+    if (!existingConnection) {
+      return NextResponse.json({ error: 'Connection not found' }, { status: 404 });
+    }
+
+    if (existingConnection.userId !== session.user.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     await prisma.connection.delete({
       where: { id },
     });
@@ -49,4 +91,3 @@ export async function DELETE(
     return NextResponse.json({ error: 'Failed to delete connection' }, { status: 500 });
   }
 }
-
