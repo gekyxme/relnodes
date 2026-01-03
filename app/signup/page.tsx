@@ -100,9 +100,9 @@ export default function SignupPage() {
         </div>
 
         {/* Card */}
-        <div className="card-linkedin p-8">
-          <h1 className="text-2xl font-bold text-white text-center mb-2">Create an account</h1>
-          <p className="text-[#b0b0b0] text-center mb-8">Start visualizing your network today</p>
+        <div className="card-linkedin p-6 sm:p-8">
+          <h1 className="text-xl sm:text-2xl font-bold text-white text-center mb-2">Create an account</h1>
+          <p className="text-[#b0b0b0] text-center mb-6 sm:mb-8 text-sm sm:text-base">Start visualizing your network today</p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Name */}

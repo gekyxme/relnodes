@@ -362,3 +362,73 @@ body {
 .dark .autocomplete-item:hover {
   background: rgba(112, 181, 249, 0.1);
 }
+
+/* Responsive utilities */
+@media (max-width: 1024px) {
+  .btn-linkedin {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+  
+  .btn-linkedin-secondary {
+    padding: 8px 18px;
+    font-size: 14px;
+  }
+  
+  .stat-value {
+    font-size: 36px;
+  }
+  
+  .avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 640px) {
+  .btn-linkedin {
+    padding: 10px 16px;
+    font-size: 13px;
+    border-radius: 20px;
+  }
+  
+  .btn-linkedin-secondary {
+    padding: 8px 14px;
+    font-size: 13px;
+    border-radius: 20px;
+  }
+  
+  .stat-value {
+    font-size: 28px;
+  }
+  
+  .stat-label {
+    font-size: 12px;
+  }
+  
+  .card-linkedin {
+    border-radius: 6px;
+  }
+  
+  .badge {
+    padding: 3px 10px;
+    font-size: 11px;
+  }
+  
+  .connection-card {
+    padding: 10px;
+    gap: 10px;
+  }
+  
+  .avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 12px;
+  }
+  
+  .input-linkedin {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+}

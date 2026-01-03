@@ -102,7 +102,7 @@ export default function GeocodingProgress({ pendingCount, totalCount, autoStart 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 20 }}
-        className="fixed bottom-6 right-6 z-50 w-80"
+        className="fixed bottom-4 right-4 left-4 sm:left-auto sm:right-6 sm:bottom-6 z-50 w-auto sm:w-80"
       >
         <div className="card-linkedin p-4 shadow-2xl">
           {/* Header */}

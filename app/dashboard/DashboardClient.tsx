@@ -11,7 +11,7 @@ import {
   X, MapPin, Building2, User, ExternalLink, Search, 
   ChevronRight, Globe, Users, AlertCircle, Edit3, Check, Trash2,
   RefreshCw, Briefcase, UserCheck, Linkedin, Upload, UserPlus,
-  Tag, FileText, Plus, Home
+  Tag, FileText, Plus, Home, Menu
 } from 'lucide-react';
 import { City } from '@/lib/cities';
 
@@ -387,6 +387,7 @@ export default function DashboardClient({ connections, allConnections, stats }: 
   const [currentTags, setCurrentTags] = useState<string[]>([]);
   const [currentNotes, setCurrentNotes] = useState('');
   const [geocodingDone, setGeocodingDone] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Show empty state if no connections
   if (allConnections.length === 0) {
@@ -542,13 +543,46 @@ export default function DashboardClient({ connections, allConnections, stats }: 
   };
 
   return (
-    <div className="flex h-screen w-full bg-black overflow-hidden">
+    <div className="flex h-screen w-full bg-black overflow-hidden relative">
+      
+      {/* MOBILE HEADER */}
+      <div className="fixed top-0 left-0 right-0 h-14 bg-[#1d2226] border-b border-[#38434f] flex items-center justify-between px-4 z-50 lg:hidden">
+        <Link href="/" className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded bg-[#0a66c2] flex items-center justify-center">
+            <Linkedin className="w-4 h-4 text-white" />
+          </div>
+          <span className="text-lg font-semibold text-white">Relnodes</span>
+        </Link>
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="p-2 hover:bg-[#38434f] rounded-lg transition-colors"
+        >
+          <Menu className="w-5 h-5 text-white" />
+        </button>
+      </div>
+
+      {/* MOBILE SIDEBAR OVERLAY */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSidebarOpen(false)}
+            className="fixed inset-0 bg-black/60 z-30 lg:hidden"
+          />
+        )}
+      </AnimatePresence>
       
       {/* LEFT SIDEBAR */}
       <motion.div 
         initial={{ x: -100, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
-        className="w-80 border-r border-[#38434f] bg-[#1d2226] flex flex-col z-20"
+        className={`
+          fixed lg:relative top-0 left-0 h-full w-72 lg:w-80 border-r border-[#38434f] bg-[#1d2226] flex flex-col z-40
+          transform transition-transform duration-300 ease-out
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        `}
       >
         {/* Header */}
         <div className="p-4 border-b border-[#38434f]">
@@ -557,18 +591,26 @@ export default function DashboardClient({ connections, allConnections, stats }: 
               <div className="w-10 h-10 rounded bg-[#0a66c2] flex items-center justify-center">
                 <Linkedin className="w-5 h-5 text-white" />
               </div>
-              <div>
+              <div className="hidden sm:block">
                 <h1 className="text-lg font-semibold text-white group-hover:text-[#70b5f9] transition-colors">Relnodes</h1>
                 <p className="text-xs text-[#b0b0b0]">Network Visualization</p>
               </div>
             </Link>
-            <Link 
-              href="/" 
-              className="p-2 hover:bg-[#38434f] rounded-lg transition-colors"
-              title="Back to Home"
-            >
-              <Home className="w-4 h-4 text-[#b0b0b0]" />
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link 
+                href="/" 
+                className="p-2 hover:bg-[#38434f] rounded-lg transition-colors"
+                title="Back to Home"
+              >
+                <Home className="w-4 h-4 text-[#b0b0b0]" />
+              </Link>
+              <button
+                onClick={() => setSidebarOpen(false)}
+                className="p-2 hover:bg-[#38434f] rounded-lg transition-colors lg:hidden"
+              >
+                <X className="w-4 h-4 text-[#b0b0b0]" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -623,7 +665,11 @@ export default function DashboardClient({ connections, allConnections, stats }: 
           </button>
           
           <button
-            onClick={() => setShowReferralFinder(true)}
+            onClick={() => {
+              setShowConnectionsList(false);
+              setShowReferralFinder(true);
+              setSidebarOpen(false);
+            }}
             className="w-full flex items-center gap-3 p-3 rounded-lg bg-[#0a66c2]/10 hover:bg-[#0a66c2]/20 transition-colors text-left group"
           >
             <UserCheck className="w-5 h-5 text-[#0a66c2]" />
@@ -635,7 +681,11 @@ export default function DashboardClient({ connections, allConnections, stats }: 
           </button>
           
           <button
-            onClick={() => setShowConnectionsList(true)}
+            onClick={() => {
+              setShowReferralFinder(false);
+              setShowConnectionsList(true);
+              setSidebarOpen(false);
+            }}
             className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-[#38434f]/50 transition-colors text-left group"
           >
             <Users className="w-5 h-5 text-[#b0b0b0]" />
@@ -658,8 +708,10 @@ export default function DashboardClient({ connections, allConnections, stats }: 
               <button
                 key={c.name}
                 onClick={() => {
+                  setShowConnectionsList(false);
                   setCompanySearch(c.name);
                   setShowReferralFinder(true);
+                  setSidebarOpen(false);
                 }}
                 className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-[#38434f]/50 transition-colors text-left group"
               >
@@ -675,7 +727,7 @@ export default function DashboardClient({ connections, allConnections, stats }: 
       </motion.div>
 
       {/* MAIN STAGE - GLOBE */}
-      <div className="flex-1 relative globe-container">
+      <div className="flex-1 relative globe-container pt-14 lg:pt-0">
         <GlobeViz 
           data={connections} 
           onNodeClick={(node) => openNodeWithTags(node)} 
@@ -688,7 +740,7 @@ export default function DashboardClient({ connections, allConnections, stats }: 
               initial={{ opacity: 0, x: 20, scale: 0.95 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
               exit={{ opacity: 0, x: 20, scale: 0.95 }}
-              className="absolute top-6 right-6 w-80 card-linkedin overflow-hidden max-h-[calc(100vh-3rem)] overflow-y-auto"
+              className="absolute top-20 lg:top-6 right-4 lg:right-6 left-4 lg:left-auto w-auto lg:w-80 card-linkedin overflow-hidden max-h-[calc(100vh-6rem)] lg:max-h-[calc(100vh-3rem)] overflow-y-auto z-30"
             >
               {/* Header */}
               <div className="p-5 border-b border-[#38434f]">
@@ -918,18 +970,23 @@ export default function DashboardClient({ connections, allConnections, stats }: 
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 250, mass: 0.8 }}
-              className="absolute right-0 top-0 bottom-0 w-[450px] bg-[#1d2226] border-l border-[#38434f] z-40 flex flex-col"
+              className="absolute right-0 top-0 bottom-0 w-full sm:w-[400px] md:w-[450px] bg-[#1d2226] border-l border-[#38434f] z-40 flex flex-col"
             >
               {/* Header */}
-              <div className="p-6 border-b border-[#38434f]">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.15, duration: 0.2 }}
+                className="p-4 sm:p-6 border-b border-[#38434f]"
+              >
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-[#0a66c2]/10 flex items-center justify-center">
-                      <UserCheck className="w-5 h-5 text-[#0a66c2]" />
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-[#0a66c2]/10 flex items-center justify-center">
+                      <UserCheck className="w-4 h-4 sm:w-5 sm:h-5 text-[#0a66c2]" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-white">Find Referrals</h2>
-                      <p className="text-sm text-[#b0b0b0]">Search connections by company</p>
+                      <h2 className="text-lg sm:text-xl font-bold text-white">Find Referrals</h2>
+                      <p className="text-xs sm:text-sm text-[#b0b0b0]">Search connections by company</p>
                     </div>
                   </div>
                   <button 
@@ -952,18 +1009,29 @@ export default function DashboardClient({ connections, allConnections, stats }: 
                     autoFocus
                   />
                 </div>
-              </div>
+              </motion.div>
 
               {/* Results */}
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {filteredCompanies.length === 0 ? (
-                  <div className="text-center py-12 text-[#b0b0b0]">
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="text-center py-12 text-[#b0b0b0]"
+                  >
                     <Briefcase className="w-8 h-8 mx-auto mb-3 opacity-50" />
                     <p>No connections found at this company</p>
-                  </div>
+                  </motion.div>
                 ) : (
-                  filteredCompanies.map((company) => (
-                    <div key={company.name} className="card-linkedin overflow-hidden">
+                  filteredCompanies.map((company, index) => (
+                    <motion.div 
+                      key={company.name} 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05, duration: 0.3 }}
+                      className="card-linkedin overflow-hidden"
+                    >
                       <div className="p-4 border-b border-[#38434f]">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
@@ -1012,7 +1080,7 @@ export default function DashboardClient({ connections, allConnections, stats }: 
                           </div>
                         )}
                       </div>
-                    </div>
+                    </motion.div>
                   ))
                 )}
               </div>
@@ -1041,12 +1109,17 @@ export default function DashboardClient({ connections, allConnections, stats }: 
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 250, mass: 0.8 }}
-              className="absolute right-0 top-0 bottom-0 w-[450px] bg-[#1d2226] border-l border-[#38434f] z-40 flex flex-col"
+              className="absolute right-0 top-0 bottom-0 w-full sm:w-[400px] md:w-[450px] bg-[#1d2226] border-l border-[#38434f] z-40 flex flex-col"
             >
               {/* Header */}
-              <div className="p-6 border-b border-[#38434f]">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.15, duration: 0.2 }}
+                className="p-4 sm:p-6 border-b border-[#38434f]"
+              >
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-white">All Connections</h2>
+                  <h2 className="text-lg sm:text-xl font-bold text-white">All Connections</h2>
                   <button 
                     onClick={() => setShowConnectionsList(false)}
                     className="p-2 hover:bg-[#38434f] rounded-lg transition-colors"
@@ -1087,13 +1160,16 @@ export default function DashboardClient({ connections, allConnections, stats }: 
                     </button>
                   ))}
                 </div>
-              </div>
+              </motion.div>
 
               {/* List */}
               <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                {filteredConnections.map((conn) => (
-                  <button
+                {filteredConnections.map((conn, index) => (
+                  <motion.button
                     key={conn.id}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: Math.min(index * 0.03, 0.3), duration: 0.25 }}
                     onClick={() => {
                       openNodeWithTags(conn);
                       setEditMode(!conn.latitude);
@@ -1128,14 +1204,19 @@ export default function DashboardClient({ connections, allConnections, stats }: 
                       )}
                     </div>
                     <ChevronRight className="w-4 h-4 text-[#666666]" />
-                  </button>
+                  </motion.button>
                 ))}
                 
                 {filteredConnections.length === 0 && (
-                  <div className="text-center py-12 text-[#b0b0b0]">
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="text-center py-12 text-[#b0b0b0]"
+                  >
                     <Search className="w-8 h-8 mx-auto mb-3 opacity-50" />
                     <p>No connections found</p>
-                  </div>
+                  </motion.div>
                 )}
               </div>
             </motion.div>

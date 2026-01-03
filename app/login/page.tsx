@@ -63,9 +63,9 @@ export default function LoginPage() {
         </div>
 
         {/* Card */}
-        <div className="card-linkedin p-8">
-          <h1 className="text-2xl font-bold text-white text-center mb-2">Welcome back</h1>
-          <p className="text-[#b0b0b0] text-center mb-8">Sign in to access your network</p>
+        <div className="card-linkedin p-6 sm:p-8">
+          <h1 className="text-xl sm:text-2xl font-bold text-white text-center mb-2">Welcome back</h1>
+          <p className="text-[#b0b0b0] text-center mb-6 sm:mb-8 text-sm sm:text-base">Sign in to access your network</p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email */}
