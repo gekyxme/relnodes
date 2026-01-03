@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -5,6 +6,17 @@ import { redirect } from 'next/navigation';
 import DashboardClient from './DashboardClient'; 
 
 export const dynamic = 'force-dynamic';
+
+function DashboardLoading() {
+  return (
+    <div className="flex h-screen w-full bg-black items-center justify-center">
+      <div className="text-center">
+        <div className="w-12 h-12 border-4 border-[#0a66c2] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+        <p className="text-[#b0b0b0]">Loading your network...</p>
+      </div>
+    </div>
+  );
+}
 
 export default async function DashboardPage() {
   // Check authentication
@@ -58,10 +70,12 @@ export default async function DashboardPage() {
     .map(([name, count]) => ({ name, count }));
 
   return (
-    <DashboardClient 
-      connections={JSON.parse(JSON.stringify(geocodedConnections))}
-      allConnections={JSON.parse(JSON.stringify(connections))}
-      stats={{ total, geocoded, pending, topCompanies, topCountries }} 
-    />
+    <Suspense fallback={<DashboardLoading />}>
+      <DashboardClient 
+        connections={JSON.parse(JSON.stringify(geocodedConnections))}
+        allConnections={JSON.parse(JSON.stringify(connections))}
+        stats={{ total, geocoded, pending, topCompanies, topCountries }} 
+      />
+    </Suspense>
   );
 }
