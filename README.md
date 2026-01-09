@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Relnodes
+
+Visualize your LinkedIn network on an interactive 3D globe. Upload your connections CSV and explore your professional network geographically.
+
+## Features
+
+- Upload LinkedIn connections via CSV export
+- Interactive 3D globe visualization using WebGL
+- Automatic geocoding of connection locations
+- Manual location editing with city autocomplete
+- Company-based referral finder
+- Connection tagging and notes
+- User authentication and data isolation
+
+## Tech Stack
+
+- Next.js 16 with App Router
+- TypeScript
+- Prisma ORM with PostgreSQL
+- NextAuth.js for authentication
+- react-globe.gl for 3D visualization
+- Tailwind CSS for styling
+- Framer Motion for animations
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- PostgreSQL database (local or Neon)
+
+### Installation
 
 ```bash
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your database URL and NextAuth secret
+
+# Run database migrations
+npx prisma migrate dev
+
+# Start development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Usage
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Sign up or sign in
+2. Export your LinkedIn connections CSV (Settings & Privacy → Data Privacy → Get a copy of your data → Connections)
+3. Upload the CSV file
+4. Locations are automatically mapped in the background
+5. Explore your network on the globe, find referrals by company, and manage connections
 
-## Learn More
+## Environment Variables
 
-To learn more about Next.js, take a look at the following resources:
+- `DATABASE_URL` - PostgreSQL connection string
+- `NEXTAUTH_URL` - Application URL
+- `NEXTAUTH_SECRET` - Secret for NextAuth.js (generate with `openssl rand -base64 32`)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deployment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The application is configured for deployment on Vercel with serverless PostgreSQL (Neon).
 
-## Deploy on Vercel
+## License
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT

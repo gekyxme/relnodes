@@ -482,8 +482,19 @@ export default function DashboardClient({ connections, allConnections, stats, in
       });
       
       if (res.ok) {
+        // Optimistically update the selectedNode state
+        setSelectedNode({
+          ...selectedNode,
+          city: selectedCity.name,
+          country: selectedCity.country,
+          latitude: selectedCity.lat,
+          longitude: selectedCity.lng,
+        });
+        
         setEditMode(false);
         setSelectedCity(null);
+        
+        // Refresh to sync with server
         router.refresh();
       }
     } catch (error) {
@@ -508,6 +519,13 @@ export default function DashboardClient({ connections, allConnections, stats, in
       });
       
       if (res.ok) {
+        // Optimistically update the selectedNode state
+        setSelectedNode({
+          ...selectedNode,
+          tags: currentTags.join(','),
+          notes: currentNotes,
+        });
+        
         setEditingTags(false);
         router.refresh();
       }
