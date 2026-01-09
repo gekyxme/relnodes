@@ -6,6 +6,7 @@ import Link from 'next/link';
 import GlobeViz from '@/components/GlobeViz';
 import CityAutocomplete from '@/components/CityAutocomplete';
 import GeocodingProgress from '@/components/GeocodingProgress';
+import LocationPromptModal from '@/components/LocationPromptModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, MapPin, Building2, User, ExternalLink, Search, 
@@ -39,10 +40,18 @@ interface Stats {
   topCountries: { name: string; count: number }[];
 }
 
+interface UserLocation {
+  latitude: number;
+  longitude: number;
+  city?: string;
+  country?: string;
+}
+
 interface Props {
   connections: Connection[];
   allConnections: Connection[];
   stats: Stats;
+  initialUserLocation: UserLocation | null;
 }
 
 // Predefined tag options
@@ -368,7 +377,7 @@ function AddConnectionModal({
   );
 }
 
-export default function DashboardClient({ connections, allConnections, stats }: Props) {
+export default function DashboardClient({ connections, allConnections, stats, initialUserLocation }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const autoStartGeocoding = searchParams.get('geocoding') === 'true';
@@ -388,6 +397,10 @@ export default function DashboardClient({ connections, allConnections, stats }: 
   const [currentNotes, setCurrentNotes] = useState('');
   const [geocodingDone, setGeocodingDone] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  
+  // User location state
+  const [userLocation, setUserLocation] = useState<UserLocation | null>(initialUserLocation);
+  const [showLocationPrompt, setShowLocationPrompt] = useState(!initialUserLocation && allConnections.length > 0);
 
   // Show empty state if no connections
   if (allConnections.length === 0) {
@@ -697,6 +710,32 @@ export default function DashboardClient({ connections, allConnections, stats }: 
           </button>
         </div>
 
+        {/* Your Location */}
+        <div className="p-4 border-b border-[#38434f]">
+          <button
+            onClick={() => setShowLocationPrompt(true)}
+            className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors text-left group ${
+              userLocation 
+                ? 'hover:bg-[#38434f]/50' 
+                : 'bg-[#b24020]/10 border border-[#b24020]/20 hover:bg-[#b24020]/20'
+            }`}
+          >
+            <MapPin className={`w-5 h-5 ${userLocation ? 'text-[#057642]' : 'text-[#b24020]'}`} />
+            <div className="flex-1">
+              <div className="text-sm font-medium text-white">
+                {userLocation ? 'Your Location' : 'Set Your Location'}
+              </div>
+              <div className="text-xs text-[#b0b0b0]">
+                {userLocation 
+                  ? `${userLocation.city || 'Unknown'}, ${userLocation.country || 'Unknown'}`
+                  : 'Required for connection arcs'
+                }
+              </div>
+            </div>
+            <Edit3 className="w-4 h-4 text-[#b0b0b0] group-hover:text-[#70b5f9] transition-colors" />
+          </button>
+        </div>
+
         {/* Top Companies */}
         <div className="flex-1 p-4 overflow-y-auto">
           <h3 className="text-xs text-[#b0b0b0] uppercase tracking-wider mb-3 flex items-center gap-2">
@@ -730,7 +769,8 @@ export default function DashboardClient({ connections, allConnections, stats }: 
       <div className="flex-1 relative globe-container pt-14 lg:pt-0">
         <GlobeViz 
           data={connections} 
-          onNodeClick={(node) => openNodeWithTags(node)} 
+          onNodeClick={(node) => openNodeWithTags(node)}
+          userLocation={userLocation}
         />
 
         {/* DETAIL POPUP */}
@@ -1231,6 +1271,16 @@ export default function DashboardClient({ connections, allConnections, stats }: 
         autoStart={autoStartGeocoding}
         onComplete={() => {
           setGeocodingDone(true);
+        }}
+      />
+
+      {/* Location Prompt Modal */}
+      <LocationPromptModal
+        isOpen={showLocationPrompt}
+        onClose={() => setShowLocationPrompt(false)}
+        onSave={(location) => {
+          setUserLocation(location);
+          setShowLocationPrompt(false);
         }}
       />
     </div>

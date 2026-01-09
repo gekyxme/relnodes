@@ -16,15 +16,23 @@ interface Connection {
   country?: string;
 }
 
+interface UserLocation {
+  latitude: number;
+  longitude: number;
+  city?: string;
+  country?: string;
+}
+
 interface Props {
   data: Connection[];
   onNodeClick?: (node: Connection) => void;
+  userLocation?: UserLocation | null;
 }
 
 // Dynamically import Globe to avoid SSR issues
 const Globe = dynamic(() => import('react-globe.gl'), { ssr: false });
 
-export default function GlobeViz({ data, onNodeClick }: Props) {
+export default function GlobeViz({ data, onNodeClick, userLocation }: Props) {
   const globeEl = useRef<any>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
@@ -51,14 +59,12 @@ export default function GlobeViz({ data, onNodeClick }: Props) {
       globeEl.current.controls().autoRotate = true;
       globeEl.current.controls().autoRotateSpeed = 0.3;
       
-      // Set initial view
-      globeEl.current.pointOfView({ lat: 20, lng: 0, altitude: 2.5 }, 1000);
+      // Set initial view - center on user's location if available
+      const initialLat = userLocation?.latitude ?? 20;
+      const initialLng = userLocation?.longitude ?? 0;
+      globeEl.current.pointOfView({ lat: initialLat, lng: initialLng, altitude: 2.5 }, 1000);
     }
-  }, [dimensions]);
-
-  // Find user's location center (for arc start point)
-  const userLat = 37.7749; // San Francisco
-  const userLng = -122.4194;
+  }, [dimensions, userLocation]);
 
   return (
     <div ref={containerRef} className="h-full w-full cursor-grab active:cursor-grabbing relative overflow-hidden">
@@ -93,13 +99,14 @@ export default function GlobeViz({ data, onNodeClick }: Props) {
           pointsMerge={false}
           
           // Arcs (Connecting lines) - LinkedIn colors
-          arcsData={data.map((d) => ({
-            startLat: userLat,
-            startLng: userLng,
+          // Only show arcs if user has set their location
+          arcsData={userLocation ? data.map((d) => ({
+            startLat: userLocation.latitude,
+            startLng: userLocation.longitude,
             endLat: d.latitude,
             endLng: d.longitude,
             connection: d,
-          }))}
+          })) : []}
           arcColor={() => ['rgba(10, 102, 194, 0.8)', 'rgba(112, 181, 249, 0.8)']}
           arcAltitude={0.12}
           arcStroke={0.4}

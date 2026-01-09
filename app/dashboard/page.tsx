@@ -26,6 +26,25 @@ export default async function DashboardPage() {
     redirect('/login?callbackUrl=/dashboard');
   }
 
+  // Fetch user data including location
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: {
+      latitude: true,
+      longitude: true,
+      city: true,
+      country: true,
+    },
+  });
+
+  // User location for the globe
+  const userLocation = user && user.latitude !== null && user.longitude !== null ? {
+    latitude: user.latitude,
+    longitude: user.longitude,
+    city: user.city || undefined,
+    country: user.country || undefined,
+  } : null;
+
   // Fetch all connections for this user
   const connections = await prisma.connection.findMany({
     where: { userId: session.user.id },
@@ -74,7 +93,8 @@ export default async function DashboardPage() {
       <DashboardClient 
         connections={JSON.parse(JSON.stringify(geocodedConnections))}
         allConnections={JSON.parse(JSON.stringify(connections))}
-        stats={{ total, geocoded, pending, topCompanies, topCountries }} 
+        stats={{ total, geocoded, pending, topCompanies, topCountries }}
+        initialUserLocation={userLocation}
       />
     </Suspense>
   );

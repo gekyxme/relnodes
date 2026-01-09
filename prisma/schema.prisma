@@ -16,6 +16,12 @@ model User {
   name          String?
   createdAt     DateTime     @default(now())
   connections   Connection[]
+  
+  // User's location (for arc origin on globe)
+  latitude      Float?
+  longitude     Float?
+  city          String?
+  country       String?
 }
 
 model Connection {
