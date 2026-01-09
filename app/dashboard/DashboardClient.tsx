@@ -200,11 +200,11 @@ function AddConnectionModal({
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="relative w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto card-linkedin"
+        className="relative w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto rounded-2xl bg-black/80 backdrop-blur-xl border border-white/10"
       >
         <form onSubmit={handleSubmit}>
           {/* Header */}
-          <div className="p-6 border-b border-[#38434f] sticky top-0 bg-[#1d2226] z-10">
+          <div className="p-6 border-b border-white/10 sticky top-0 bg-black/80 backdrop-blur-md z-10">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-[#0a66c2]/10 flex items-center justify-center">
@@ -345,7 +345,7 @@ function AddConnectionModal({
           </div>
 
           {/* Footer */}
-          <div className="p-6 border-t border-[#38434f] flex gap-3">
+          <div className="p-6 border-t border-white/10 flex gap-3">
             <button
               type="button"
               onClick={onClose}
@@ -559,7 +559,7 @@ export default function DashboardClient({ connections, allConnections, stats, in
     <div className="flex h-screen w-full bg-black overflow-hidden relative">
       
       {/* MOBILE HEADER */}
-      <div className="fixed top-0 left-0 right-0 h-14 bg-[#1d2226] border-b border-[#38434f] flex items-center justify-between px-4 z-50 lg:hidden">
+      <div className="fixed top-0 left-0 right-0 h-14 bg-black/80 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-4 z-50 lg:hidden">
         <Link href="/" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded bg-[#0a66c2] flex items-center justify-center">
             <Linkedin className="w-4 h-4 text-white" />
@@ -592,51 +592,51 @@ export default function DashboardClient({ connections, allConnections, stats, in
         initial={{ x: -100, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         className={`
-          fixed lg:relative top-0 left-0 h-full w-72 lg:w-80 border-r border-[#38434f] bg-[#1d2226] flex flex-col z-40
+          fixed lg:relative top-0 left-0 h-full w-72 lg:w-80 border-r border-white/10 bg-black/60 backdrop-blur-xl flex flex-col z-40
           transform transition-transform duration-300 ease-out
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
       >
         {/* Header */}
-        <div className="p-4 border-b border-[#38434f]">
+        <div className="p-4 border-b border-white/10">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 rounded bg-[#0a66c2] flex items-center justify-center">
-                <Linkedin className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 rounded-xl bg-[#0a66c2]/20 border border-[#0a66c2]/30 flex items-center justify-center">
+                <Globe className="w-5 h-5 text-[#0a66c2]" />
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-lg font-semibold text-white group-hover:text-[#70b5f9] transition-colors">Relnodes</h1>
-                <p className="text-xs text-[#b0b0b0]">Network Visualization</p>
+                <p className="text-xs text-white/50">Network Visualization</p>
               </div>
             </Link>
             <div className="flex items-center gap-2">
               <Link 
                 href="/" 
-                className="p-2 hover:bg-[#38434f] rounded-lg transition-colors"
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
                 title="Back to Home"
               >
-                <Home className="w-4 h-4 text-[#b0b0b0]" />
+                <Home className="w-4 h-4 text-white/60" />
               </Link>
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="p-2 hover:bg-[#38434f] rounded-lg transition-colors lg:hidden"
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors lg:hidden"
               >
-                <X className="w-4 h-4 text-[#b0b0b0]" />
+                <X className="w-4 h-4 text-white/60" />
               </button>
             </div>
           </div>
         </div>
 
         {/* Stats */}
-        <div className="p-4 border-b border-[#38434f]">
+        <div className="p-4 border-b border-white/10">
           <div className="grid grid-cols-2 gap-3">
-            <div className="card-linkedin p-3 text-center">
+            <div className="p-3 text-center rounded-xl bg-white/5 border border-white/10">
               <div className="text-2xl font-bold text-[#0a66c2]">{stats.total}</div>
-              <div className="text-xs text-[#b0b0b0]">Total</div>
+              <div className="text-xs text-white/50">Total</div>
             </div>
-            <div className="card-linkedin p-3 text-center">
+            <div className="p-3 text-center rounded-xl bg-white/5 border border-white/10">
               <div className="text-2xl font-bold text-[#057642]">{stats.geocoded}</div>
-              <div className="text-xs text-[#b0b0b0]">Mapped</div>
+              <div className="text-xs text-white/50">Mapped</div>
             </div>
           </div>
           
@@ -665,7 +665,7 @@ export default function DashboardClient({ connections, allConnections, stats, in
         </div>
 
         {/* Quick Actions */}
-        <div className="p-4 border-b border-[#38434f] space-y-2">
+        <div className="p-4 border-b border-white/10 space-y-2">
           <button
             onClick={() => setShowAddModal(true)}
             className="w-full flex items-center gap-3 p-3 rounded-lg bg-[#0a66c2] hover:bg-[#004182] transition-colors text-left group"
@@ -711,7 +711,7 @@ export default function DashboardClient({ connections, allConnections, stats, in
         </div>
 
         {/* Your Location */}
-        <div className="p-4 border-b border-[#38434f]">
+        <div className="p-4 border-b border-white/10">
           <button
             onClick={() => setShowLocationPrompt(true)}
             className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors text-left group ${
@@ -780,10 +780,10 @@ export default function DashboardClient({ connections, allConnections, stats, in
               initial={{ opacity: 0, x: 20, scale: 0.95 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
               exit={{ opacity: 0, x: 20, scale: 0.95 }}
-              className="absolute top-20 lg:top-6 right-4 lg:right-6 left-4 lg:left-auto w-auto lg:w-80 card-linkedin overflow-hidden max-h-[calc(100vh-6rem)] lg:max-h-[calc(100vh-3rem)] overflow-y-auto z-30"
+              className="absolute top-20 lg:top-6 right-4 lg:right-6 left-4 lg:left-auto w-auto lg:w-80 rounded-2xl bg-black/80 backdrop-blur-xl border border-white/10 overflow-hidden max-h-[calc(100vh-6rem)] lg:max-h-[calc(100vh-3rem)] overflow-y-auto z-30"
             >
               {/* Header */}
-              <div className="p-5 border-b border-[#38434f]">
+              <div className="p-5 border-b border-white/10">
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-3">
                     <div className="avatar">
@@ -902,7 +902,7 @@ export default function DashboardClient({ connections, allConnections, stats, in
                         onChange={(e) => setCurrentNotes(e.target.value)}
                         placeholder="Add notes..."
                         rows={2}
-                        className="w-full bg-[#1d2226] border border-[#38434f] rounded-lg p-2 text-sm text-white placeholder:text-[#666666] focus:outline-none focus:border-[#0a66c2] resize-none"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#0a66c2]/50 resize-none backdrop-blur-sm"
                       />
                     </div>
                     <div className="flex gap-2">
@@ -1010,14 +1010,14 @@ export default function DashboardClient({ connections, allConnections, stats, in
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 250, mass: 0.8 }}
-              className="absolute right-0 top-0 bottom-0 w-full sm:w-[400px] md:w-[450px] bg-[#1d2226] border-l border-[#38434f] z-40 flex flex-col"
+              className="absolute right-0 top-0 bottom-0 w-full sm:w-[400px] md:w-[450px] bg-black/80 backdrop-blur-xl border-l border-white/10 z-40 flex flex-col"
             >
               {/* Header */}
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.15, duration: 0.2 }}
-                className="p-4 sm:p-6 border-b border-[#38434f]"
+                className="p-4 sm:p-6 border-b border-white/10"
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
@@ -1045,7 +1045,7 @@ export default function DashboardClient({ connections, allConnections, stats, in
                     placeholder="Search for a company (e.g., Google, Meta)..."
                     value={companySearch}
                     onChange={(e) => setCompanySearch(e.target.value)}
-                    className="w-full bg-[#1d2226] border border-[#38434f] rounded-lg py-3 pl-10 pr-4 text-sm text-white placeholder:text-[#666666] focus:outline-none focus:border-[#0a66c2] focus:ring-2 focus:ring-[#0a66c2]/20 transition-all"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#0a66c2]/50 focus:ring-2 focus:ring-[#0a66c2]/20 transition-all backdrop-blur-sm"
                     autoFocus
                   />
                 </div>
@@ -1070,9 +1070,9 @@ export default function DashboardClient({ connections, allConnections, stats, in
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05, duration: 0.3 }}
-                      className="card-linkedin overflow-hidden"
+                      className="rounded-xl bg-white/5 border border-white/10 overflow-hidden hover:bg-white/10 transition-colors"
                     >
-                      <div className="p-4 border-b border-[#38434f]">
+                      <div className="p-4 border-b border-white/10">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded bg-[#38434f] flex items-center justify-center">
@@ -1149,14 +1149,14 @@ export default function DashboardClient({ connections, allConnections, stats, in
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 250, mass: 0.8 }}
-              className="absolute right-0 top-0 bottom-0 w-full sm:w-[400px] md:w-[450px] bg-[#1d2226] border-l border-[#38434f] z-40 flex flex-col"
+              className="absolute right-0 top-0 bottom-0 w-full sm:w-[400px] md:w-[450px] bg-black/80 backdrop-blur-xl border-l border-white/10 z-40 flex flex-col"
             >
               {/* Header */}
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.15, duration: 0.2 }}
-                className="p-4 sm:p-6 border-b border-[#38434f]"
+                className="p-4 sm:p-6 border-b border-white/10"
               >
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg sm:text-xl font-bold text-white">All Connections</h2>
@@ -1176,7 +1176,7 @@ export default function DashboardClient({ connections, allConnections, stats, in
                     placeholder="Search by name, company, city, or tag..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-[#1d2226] border border-[#38434f] rounded-lg py-3 pl-10 pr-4 text-sm text-white placeholder:text-[#666666] focus:outline-none focus:border-[#0a66c2] focus:ring-2 focus:ring-[#0a66c2]/20 transition-all"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#0a66c2]/50 focus:ring-2 focus:ring-[#0a66c2]/20 transition-all backdrop-blur-sm"
                   />
                 </div>
 
@@ -1215,7 +1215,7 @@ export default function DashboardClient({ connections, allConnections, stats, in
                       setEditMode(!conn.latitude);
                       setShowConnectionsList(false);
                     }}
-                    className="w-full card-linkedin p-4 flex items-center gap-4 card-hover text-left"
+                    className="w-full p-4 flex items-center gap-4 text-left rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
                   >
                     <div className={`avatar w-12 h-12 ${!conn.latitude ? 'opacity-50' : ''}`}>
                       {getInitials(conn.firstName, conn.lastName)}

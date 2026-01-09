@@ -4,8 +4,15 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
-import { Linkedin, Mail, Lock, User, Eye, EyeOff, AlertCircle, Loader2, Check } from 'lucide-react';
+import { Globe, Mail, Lock, User, Eye, EyeOff, AlertCircle, Loader2, Check } from 'lucide-react';
+
+// Dynamically import Threads
+const Threads = dynamic(() => import('@/components/Threads'), { 
+  ssr: false,
+  loading: () => <div className="w-full h-full bg-black" />
+});
 
 const PASSWORD_REQUIREMENTS = [
   { test: (p: string) => p.length >= 8, label: 'At least 8 characters' },
@@ -30,7 +37,6 @@ export default function SignupPage() {
     e.preventDefault();
     setError('');
 
-    // Client-side validation
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -44,7 +50,6 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      // Register
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -58,7 +63,6 @@ export default function SignupPage() {
         return;
       }
 
-      // Auto sign in after registration
       const signInResult = await signIn('credentials', {
         email,
         password,
@@ -66,7 +70,6 @@ export default function SignupPage() {
       });
 
       if (signInResult?.error) {
-        // Registration succeeded but sign in failed - redirect to login
         router.push('/login?registered=true');
       } else {
         router.push('/dashboard');
@@ -80,52 +83,62 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center px-4 py-12">
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0a1628] via-black to-black" />
+    <div className="relative min-h-screen bg-black flex items-center justify-center px-4 py-12">
+      {/* Threads Background */}
+      <div className="fixed inset-0 z-0">
+        <Threads
+          color={[0.039, 0.404, 0.761]}
+          amplitude={1.2}
+          distance={0.3}
+          enableMouseInteraction={true}
+        />
+      </div>
+      
+      {/* Gradient overlay */}
+      <div className="fixed inset-0 z-[1] bg-gradient-to-b from-black/70 via-black/50 to-black/80 pointer-events-none" />
       
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative w-full max-w-md"
+        className="relative z-10 w-full max-w-md"
       >
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-[#0a66c2] flex items-center justify-center">
-              <Linkedin className="w-7 h-7 text-white" />
+            <div className="w-12 h-12 rounded-xl bg-[#0a66c2]/20 backdrop-blur-sm border border-[#0a66c2]/30 flex items-center justify-center">
+              <Globe className="w-7 h-7 text-[#0a66c2]" />
             </div>
             <span className="text-2xl font-bold text-white">Relnodes</span>
           </Link>
         </div>
 
-        {/* Card */}
-        <div className="card-linkedin p-6 sm:p-8">
-          <h1 className="text-xl sm:text-2xl font-bold text-white text-center mb-2">Create an account</h1>
-          <p className="text-[#b0b0b0] text-center mb-6 sm:mb-8 text-sm sm:text-base">Start visualizing your network today</p>
+        {/* Glass Card */}
+        <div className="p-8 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10">
+          <h1 className="text-2xl font-bold text-white text-center mb-2">Create an account</h1>
+          <p className="text-white/60 text-center mb-8">Start visualizing your network today</p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Name */}
             <div>
-              <label className="block text-sm text-[#b0b0b0] mb-2">Name</label>
+              <label className="block text-sm text-white/70 mb-2">Name</label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#666666]" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="John Doe"
                   autoComplete="name"
-                  className="w-full bg-[#1d2226] border border-[#38434f] rounded-lg py-3 pl-11 pr-4 text-white placeholder:text-[#666666] focus:outline-none focus:border-[#0a66c2] focus:ring-2 focus:ring-[#0a66c2]/20 transition-all"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-white placeholder:text-white/30 focus:outline-none focus:border-[#0a66c2]/50 focus:ring-2 focus:ring-[#0a66c2]/20 transition-all backdrop-blur-sm"
                 />
               </div>
             </div>
 
             {/* Email */}
             <div>
-              <label className="block text-sm text-[#b0b0b0] mb-2">Email</label>
+              <label className="block text-sm text-white/70 mb-2">Email</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#666666]" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                 <input
                   type="email"
                   value={email}
@@ -133,16 +146,16 @@ export default function SignupPage() {
                   placeholder="you@example.com"
                   required
                   autoComplete="email"
-                  className="w-full bg-[#1d2226] border border-[#38434f] rounded-lg py-3 pl-11 pr-4 text-white placeholder:text-[#666666] focus:outline-none focus:border-[#0a66c2] focus:ring-2 focus:ring-[#0a66c2]/20 transition-all"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-white placeholder:text-white/30 focus:outline-none focus:border-[#0a66c2]/50 focus:ring-2 focus:ring-[#0a66c2]/20 transition-all backdrop-blur-sm"
                 />
               </div>
             </div>
 
             {/* Password */}
             <div>
-              <label className="block text-sm text-[#b0b0b0] mb-2">Password</label>
+              <label className="block text-sm text-white/70 mb-2">Password</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#666666]" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
@@ -150,22 +163,22 @@ export default function SignupPage() {
                   placeholder="••••••••"
                   required
                   autoComplete="new-password"
-                  className="w-full bg-[#1d2226] border border-[#38434f] rounded-lg py-3 pl-11 pr-11 text-white placeholder:text-[#666666] focus:outline-none focus:border-[#0a66c2] focus:ring-2 focus:ring-[#0a66c2]/20 transition-all"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-11 pr-11 text-white placeholder:text-white/30 focus:outline-none focus:border-[#0a66c2]/50 focus:ring-2 focus:ring-[#0a66c2]/20 transition-all backdrop-blur-sm"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-[#38434f] rounded transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-white/10 rounded transition-colors"
                 >
                   {showPassword ? (
-                    <EyeOff className="w-4 h-4 text-[#666666]" />
+                    <EyeOff className="w-4 h-4 text-white/40" />
                   ) : (
-                    <Eye className="w-4 h-4 text-[#666666]" />
+                    <Eye className="w-4 h-4 text-white/40" />
                   )}
                 </button>
               </div>
 
-              {/* Password strength indicator */}
+              {/* Password strength */}
               {password && (
                 <div className="mt-3 space-y-2">
                   <div className="flex gap-1">
@@ -175,13 +188,13 @@ export default function SignupPage() {
                         className={`h-1 flex-1 rounded-full transition-colors ${
                           i < passwordStrength
                             ? passwordStrength <= 1
-                              ? 'bg-[#b24020]'
+                              ? 'bg-red-500'
                               : passwordStrength <= 2
                               ? 'bg-yellow-500'
                               : passwordStrength <= 3
                               ? 'bg-[#0a66c2]'
-                              : 'bg-[#057642]'
-                            : 'bg-[#38434f]'
+                              : 'bg-green-500'
+                            : 'bg-white/10'
                         }`}
                       />
                     ))}
@@ -191,7 +204,7 @@ export default function SignupPage() {
                       <div
                         key={i}
                         className={`flex items-center gap-1.5 text-xs ${
-                          req.test(password) ? 'text-[#057642]' : 'text-[#666666]'
+                          req.test(password) ? 'text-green-400' : 'text-white/40'
                         }`}
                       >
                         <Check className={`w-3 h-3 ${req.test(password) ? 'opacity-100' : 'opacity-30'}`} />
@@ -205,9 +218,9 @@ export default function SignupPage() {
 
             {/* Confirm Password */}
             <div>
-              <label className="block text-sm text-[#b0b0b0] mb-2">Confirm Password</label>
+              <label className="block text-sm text-white/70 mb-2">Confirm Password</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#666666]" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={confirmPassword}
@@ -215,15 +228,15 @@ export default function SignupPage() {
                   placeholder="••••••••"
                   required
                   autoComplete="new-password"
-                  className={`w-full bg-[#1d2226] border rounded-lg py-3 pl-11 pr-4 text-white placeholder:text-[#666666] focus:outline-none focus:ring-2 transition-all ${
+                  className={`w-full bg-white/5 border rounded-xl py-3 pl-11 pr-4 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 transition-all backdrop-blur-sm ${
                     confirmPassword && password !== confirmPassword
-                      ? 'border-[#b24020] focus:border-[#b24020] focus:ring-[#b24020]/20'
-                      : 'border-[#38434f] focus:border-[#0a66c2] focus:ring-[#0a66c2]/20'
+                      ? 'border-red-500/50 focus:border-red-500/50 focus:ring-red-500/20'
+                      : 'border-white/10 focus:border-[#0a66c2]/50 focus:ring-[#0a66c2]/20'
                   }`}
                 />
               </div>
               {confirmPassword && password !== confirmPassword && (
-                <p className="mt-1 text-xs text-[#b24020]">Passwords do not match</p>
+                <p className="mt-1 text-xs text-red-400">Passwords do not match</p>
               )}
             </div>
 
@@ -232,7 +245,7 @@ export default function SignupPage() {
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-3 rounded-lg bg-[#b24020]/10 border border-[#b24020]/20 flex items-center gap-2 text-[#b24020] text-sm"
+                className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center gap-2 text-red-400 text-sm"
               >
                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
                 {error}
@@ -243,7 +256,7 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={loading || passwordStrength < PASSWORD_REQUIREMENTS.length}
-              className="w-full btn-linkedin py-3 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-[#0a66c2] hover:bg-[#004182] text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>
@@ -258,13 +271,13 @@ export default function SignupPage() {
 
           {/* Divider */}
           <div className="my-6 flex items-center gap-4">
-            <div className="flex-1 h-px bg-[#38434f]" />
-            <span className="text-sm text-[#666666]">or</span>
-            <div className="flex-1 h-px bg-[#38434f]" />
+            <div className="flex-1 h-px bg-white/10" />
+            <span className="text-sm text-white/40">or</span>
+            <div className="flex-1 h-px bg-white/10" />
           </div>
 
           {/* Sign in link */}
-          <p className="text-center text-[#b0b0b0]">
+          <p className="text-center text-white/60">
             Already have an account?{' '}
             <Link href="/login" className="text-[#0a66c2] hover:underline font-medium">
               Sign in
@@ -274,7 +287,7 @@ export default function SignupPage() {
 
         {/* Back to home */}
         <p className="text-center mt-6">
-          <Link href="/" className="text-sm text-[#666666] hover:text-[#b0b0b0] transition-colors">
+          <Link href="/" className="text-sm text-white/40 hover:text-white/60 transition-colors">
             ← Back to home
           </Link>
         </p>
@@ -282,4 +295,3 @@ export default function SignupPage() {
     </div>
   );
 }
-

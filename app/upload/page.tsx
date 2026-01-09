@@ -2,9 +2,16 @@
 
 import { useState, useCallback, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, FileText, CheckCircle, AlertCircle, Loader2, ArrowRight, Info, Linkedin } from 'lucide-react';
-import Navigation from '@/components/Navigation';
+import { Upload, FileText, CheckCircle, AlertCircle, Loader2, ArrowRight, Info, ArrowLeft, Globe } from 'lucide-react';
+
+// Dynamically import Threads
+const Threads = dynamic(() => import('@/components/Threads'), { 
+  ssr: false,
+  loading: () => <div className="w-full h-full bg-black" />
+});
 
 export default function UploadPage() {
   const router = useRouter();
@@ -77,7 +84,6 @@ export default function UploadPage() {
       setUploadSuccess(true);
       setMessage(`Successfully imported ${result.count} connections!`);
       
-      // Redirect to dashboard after a brief delay to show success
       setTimeout(() => {
         router.push('/dashboard?geocoding=true');
       }, 1500);
@@ -89,75 +95,114 @@ export default function UploadPage() {
     }
   };
 
+  const steps = [
+    'Go to LinkedIn.com and click your profile picture',
+    'Select "Settings & Privacy"',
+    'Go to "Data Privacy" → "Get a copy of your data"',
+    'Choose "Connections" and request archive',
+    'Download and extract the ZIP file',
+    'Upload the Connections.csv file here'
+  ];
+
   return (
-    <div className="min-h-screen bg-black">
-      <Navigation />
+    <div className="relative min-h-screen bg-black">
+      {/* Threads Background */}
+      <div className="fixed inset-0 z-0">
+        <Threads
+          color={[0.039, 0.404, 0.761]}
+          amplitude={1.2}
+          distance={0.3}
+          enableMouseInteraction={true}
+        />
+      </div>
       
-      <main className="pt-14">
-        <div className="max-w-4xl mx-auto px-6 py-12">
+      {/* Gradient overlay */}
+      <div className="fixed inset-0 z-[1] bg-gradient-to-b from-black/70 via-black/50 to-black/80 pointer-events-none" />
+      
+      {/* Navigation */}
+      <nav className="fixed top-0 left-0 right-0 z-50">
+        <div className="max-w-6xl mx-auto px-6 py-6">
+          <div className="flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#0a66c2]/20 backdrop-blur-sm border border-[#0a66c2]/30 flex items-center justify-center">
+                <Globe className="w-5 h-5 text-[#0a66c2]" />
+              </div>
+              <span className="text-xl font-bold text-white">Relnodes</span>
+            </Link>
+            <Link 
+              href="/dashboard"
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 text-white/80 hover:text-white hover:bg-white/10 transition-all text-sm"
+            >
+              Go to Dashboard
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <main className="relative z-10 min-h-screen flex items-center justify-center px-6 pt-24 pb-12">
+        <div className="w-full max-w-4xl">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-12"
+          >
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+              Upload Your Connections
+            </h1>
+            <p className="text-white/60 text-lg max-w-xl mx-auto">
+              Export your LinkedIn connections and upload the CSV file to visualize your network on the globe.
+            </p>
+          </motion.div>
+
           <div className="grid lg:grid-cols-2 gap-8">
-            {/* Left Column - Instructions */}
-            <div>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                <h1 className="text-3xl font-bold text-white mb-4">
-                  Upload Your Connections
-                </h1>
-                <p className="text-[#b0b0b0] mb-8">
-                  Export your LinkedIn connections and upload the CSV file to visualize your network.
-                </p>
-              </motion.div>
-
-              {/* Instructions Card */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="card-linkedin p-6"
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-lg bg-[#0a66c2]/10 flex items-center justify-center">
-                    <Linkedin className="w-5 h-5 text-[#0a66c2]" />
-                  </div>
-                  <h3 className="font-semibold text-white">How to export from LinkedIn</h3>
-                </div>
-                
-                <ol className="space-y-4">
-                  {[
-                    'Go to LinkedIn.com and click your profile picture',
-                    'Select "Settings & Privacy"',
-                    'Go to "Data Privacy" → "Get a copy of your data"',
-                    'Choose "Connections" and request archive',
-                    'Download and extract the ZIP file',
-                    'Upload the Connections.csv file here'
-                  ].map((step, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <div className="w-6 h-6 rounded-full bg-[#0a66c2]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span className="text-xs font-semibold text-[#0a66c2]">{i + 1}</span>
-                      </div>
-                      <span className="text-[#b0b0b0] text-sm">{step}</span>
-                    </li>
-                  ))}
-                </ol>
-
-                <div className="mt-6 p-3 rounded-lg bg-[#0a66c2]/10 flex items-start gap-3">
-                  <Info className="w-4 h-4 text-[#70b5f9] flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-[#70b5f9]">
-                    After upload, you&apos;ll be taken to your dashboard where locations will be mapped automatically in the background.
-                  </p>
-                </div>
-              </motion.div>
-            </div>
-
-            {/* Right Column - Upload Area */}
+            {/* Instructions Card */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+              className="p-6 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10"
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-[#0a66c2]/20 flex items-center justify-center">
+                  <Info className="w-5 h-5 text-[#0a66c2]" />
+                </div>
+                <h3 className="font-semibold text-white text-lg">How to export from LinkedIn</h3>
+              </div>
+              
+              <ol className="space-y-4">
+                {steps.map((step, i) => (
+                  <motion.li 
+                    key={i} 
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 + i * 0.05 }}
+                    className="flex items-start gap-3"
+                  >
+                    <div className="w-6 h-6 rounded-full bg-[#0a66c2]/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-xs font-semibold text-[#0a66c2]">{i + 1}</span>
+                    </div>
+                    <span className="text-white/70 text-sm leading-relaxed">{step}</span>
+                  </motion.li>
+                ))}
+              </ol>
+
+              <div className="mt-6 p-4 rounded-xl bg-[#0a66c2]/10 border border-[#0a66c2]/20">
+                <p className="text-sm text-[#70b5f9]">
+                  💡 After upload, you&apos;ll be taken to your dashboard where locations will be mapped automatically.
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Upload Area */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={handleSubmit} className="h-full flex flex-col">
                 {/* Dropzone */}
                 <div
                   onDragEnter={handleDrag}
@@ -165,12 +210,15 @@ export default function UploadPage() {
                   onDragOver={handleDrag}
                   onDrop={handleDrop}
                   className={`
-                    relative card-linkedin p-12 text-center transition-all cursor-pointer
+                    relative flex-1 min-h-[300px] rounded-2xl bg-white/5 backdrop-blur-md border-2 border-dashed
+                    flex items-center justify-center cursor-pointer transition-all
                     ${dragActive 
-                      ? 'ring-2 ring-[#0a66c2] bg-[#0a66c2]/5' 
-                      : 'hover:bg-[#38434f]/20'}
-                    ${file ? 'ring-2 ring-[#057642]' : ''}
-                    ${uploadSuccess ? 'ring-2 ring-[#057642] bg-[#057642]/5' : ''}
+                      ? 'border-[#0a66c2] bg-[#0a66c2]/10' 
+                      : file 
+                        ? 'border-green-500/50 bg-green-500/5'
+                        : uploadSuccess 
+                          ? 'border-green-500 bg-green-500/10'
+                          : 'border-white/20 hover:border-white/40 hover:bg-white/10'}
                   `}
                 >
                   <input
@@ -188,14 +236,15 @@ export default function UploadPage() {
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.9 }}
+                        className="text-center p-6"
                       >
-                        <div className="w-16 h-16 rounded-full bg-[#057642]/20 flex items-center justify-center mx-auto mb-4">
-                          <CheckCircle className="w-8 h-8 text-[#057642]" />
+                        <div className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
+                          <CheckCircle className="w-10 h-10 text-green-500" />
                         </div>
-                        <p className="text-lg font-medium text-[#057642] mb-2">
+                        <p className="text-xl font-semibold text-green-400 mb-2">
                           {uploadedCount} connections imported!
                         </p>
-                        <p className="text-sm text-[#b0b0b0]">
+                        <p className="text-white/60">
                           Redirecting to dashboard...
                         </p>
                       </motion.div>
@@ -205,49 +254,52 @@ export default function UploadPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
+                        className="text-center p-6"
                       >
-                        <div className="w-16 h-16 rounded-full bg-[#0a66c2]/20 flex items-center justify-center mx-auto mb-4">
-                          <Loader2 className="w-8 h-8 text-[#0a66c2] animate-spin" />
+                        <div className="w-20 h-20 rounded-full bg-[#0a66c2]/20 flex items-center justify-center mx-auto mb-4">
+                          <Loader2 className="w-10 h-10 text-[#0a66c2] animate-spin" />
                         </div>
-                        <p className="text-lg font-medium text-white mb-2">
+                        <p className="text-xl font-semibold text-white mb-2">
                           Processing your connections...
                         </p>
-                        <p className="text-sm text-[#b0b0b0]">
+                        <p className="text-white/60">
                           This will only take a moment
                         </p>
                       </motion.div>
-                    ) : !file ? (
-                      <motion.div
-                        key="empty"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                      >
-                        <div className="w-16 h-16 rounded-full bg-[#1d2226] flex items-center justify-center mx-auto mb-4">
-                          <Upload className="w-8 h-8 text-[#0a66c2]" />
-                        </div>
-                        <p className="text-lg font-medium text-white mb-2">
-                          Drag & drop your CSV file here
-                        </p>
-                        <p className="text-sm text-[#b0b0b0]">
-                          or click to browse
-                        </p>
-                      </motion.div>
-                    ) : (
+                    ) : file ? (
                       <motion.div
                         key="file"
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.9 }}
+                        className="text-center p-6"
                       >
-                        <div className="w-16 h-16 rounded-full bg-[#057642]/10 flex items-center justify-center mx-auto mb-4">
-                          <FileText className="w-8 h-8 text-[#057642]" />
+                        <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
+                          <FileText className="w-10 h-10 text-green-500" />
                         </div>
-                        <p className="text-lg font-medium text-[#057642] mb-1">
+                        <p className="text-xl font-semibold text-green-400 mb-1">
                           {file.name}
                         </p>
-                        <p className="text-sm text-[#b0b0b0]">
-                          {(file.size / 1024).toFixed(1)} KB
+                        <p className="text-white/60">
+                          {(file.size / 1024).toFixed(1)} KB • Ready to upload
+                        </p>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="empty"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="text-center p-6"
+                      >
+                        <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-4">
+                          <Upload className="w-10 h-10 text-white/60" />
+                        </div>
+                        <p className="text-xl font-semibold text-white mb-2">
+                          Drag & drop your CSV file
+                        </p>
+                        <p className="text-white/60">
+                          or click to browse
                         </p>
                       </motion.div>
                     )}
@@ -259,22 +311,22 @@ export default function UploadPage() {
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mt-6 p-4 rounded-lg bg-[#b24020]/10 border border-[#b24020]/20 flex items-center gap-3"
+                    className="mt-4 p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center gap-3"
                   >
-                    <AlertCircle className="w-5 h-5 text-[#b24020] flex-shrink-0" />
-                    <span className="text-[#b24020]">{error}</span>
+                    <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+                    <span className="text-red-400">{error}</span>
                   </motion.div>
                 )}
 
                 {/* Success Message */}
-                {message && !error && (
+                {message && !error && !uploadSuccess && (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mt-6 p-4 rounded-lg bg-[#057642]/10 border border-[#057642]/20 flex items-center gap-3"
+                    className="mt-4 p-4 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center gap-3"
                   >
-                    <CheckCircle className="w-5 h-5 text-[#057642] flex-shrink-0" />
-                    <span className="text-[#057642]">{message}</span>
+                    <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
+                    <span className="text-green-400">{message}</span>
                   </motion.div>
                 )}
 
@@ -285,7 +337,7 @@ export default function UploadPage() {
                     disabled={!file || isUploading}
                     whileHover={{ scale: file && !isUploading ? 1.02 : 1 }}
                     whileTap={{ scale: file && !isUploading ? 0.98 : 1 }}
-                    className="mt-6 btn-linkedin w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="mt-4 w-full py-4 bg-[#0a66c2] hover:bg-[#004182] text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isUploading ? (
                       <>
@@ -304,11 +356,24 @@ export default function UploadPage() {
               </form>
 
               {/* Privacy Note */}
-              <p className="text-center text-sm text-[#666666] mt-6">
-                🔒 Your data is processed securely and never shared.
+              <p className="text-center text-sm text-white/40 mt-4">
+                 Your data is processed securely and never shared.
               </p>
             </motion.div>
           </div>
+
+          {/* Back to home */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="text-center mt-12"
+          >
+            <Link href="/" className="inline-flex items-center gap-2 text-white/40 hover:text-white/60 transition-colors text-sm">
+              <ArrowLeft className="w-4 h-4" />
+              Back to home
+            </Link>
+          </motion.div>
         </div>
       </main>
     </div>

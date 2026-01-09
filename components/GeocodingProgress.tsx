@@ -104,7 +104,7 @@ export default function GeocodingProgress({ pendingCount, totalCount, autoStart 
         exit={{ opacity: 0, y: 20 }}
         className="fixed bottom-4 right-4 left-4 sm:left-auto sm:right-6 sm:bottom-6 z-50 w-auto sm:w-80"
       >
-        <div className="card-linkedin p-4 shadow-2xl">
+        <div className="p-4 rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl">
           {/* Header */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -114,17 +114,17 @@ export default function GeocodingProgress({ pendingCount, totalCount, autoStart 
                 </div>
               ) : isComplete ? (
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  failedCount > 0 ? 'bg-[#b24020]/20' : 'bg-[#057642]/20'
+                  failedCount > 0 ? 'bg-red-500/20' : 'bg-green-500/20'
                 }`}>
                   {failedCount > 0 ? (
-                    <AlertTriangle className="w-4 h-4 text-[#b24020]" />
+                    <AlertTriangle className="w-4 h-4 text-red-400" />
                   ) : (
-                    <CheckCircle className="w-4 h-4 text-[#057642]" />
+                    <CheckCircle className="w-4 h-4 text-green-400" />
                   )}
                 </div>
               ) : (
-                <div className="w-8 h-8 rounded-full bg-[#38434f] flex items-center justify-center">
-                  <MapPin className="w-4 h-4 text-[#b0b0b0]" />
+                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                  <MapPin className="w-4 h-4 text-white/60" />
                 </div>
               )}
               <div>
@@ -135,7 +135,7 @@ export default function GeocodingProgress({ pendingCount, totalCount, autoStart 
                     ? 'Mapping Locations' 
                     : 'Location Mapping'}
                 </h4>
-                <p className="text-xs text-[#b0b0b0]">
+                <p className="text-xs text-white/50">
                   {isComplete 
                     ? (failedCount > 0 
                         ? `${successCount} mapped, ${failedCount} couldn't be found`
@@ -149,9 +149,9 @@ export default function GeocodingProgress({ pendingCount, totalCount, autoStart 
             {(isComplete || !isRunning) && (
               <button
                 onClick={() => setDismissed(true)}
-                className="p-1 hover:bg-[#38434f] rounded transition-colors"
+                className="p-1 hover:bg-white/10 rounded transition-colors"
               >
-                <X className="w-4 h-4 text-[#666666]" />
+                <X className="w-4 h-4 text-white/40" />
               </button>
             )}
           </div>
@@ -159,11 +159,11 @@ export default function GeocodingProgress({ pendingCount, totalCount, autoStart 
           {/* Progress Bar */}
           {(isRunning || isComplete) && (
             <div className="mb-3">
-              <div className="h-2 bg-[#38434f] rounded-full overflow-hidden">
+              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
                 <motion.div
                   className={`h-full ${
                     isComplete 
-                      ? (failedCount > 0 ? 'bg-[#b24020]' : 'bg-[#057642]')
+                      ? (failedCount > 0 ? 'bg-red-500' : 'bg-green-500')
                       : 'bg-[#0a66c2]'
                   }`}
                   initial={{ width: 0 }}
@@ -172,10 +172,10 @@ export default function GeocodingProgress({ pendingCount, totalCount, autoStart 
                 />
               </div>
               <div className="flex justify-between mt-1">
-                <span className="text-xs text-[#666666]">
+                <span className="text-xs text-white/40">
                   {isRunning ? `${successCount} mapped` : `${Math.round(progress)}%`}
                 </span>
-                <span className="text-xs text-[#666666]">
+                <span className="text-xs text-white/40">
                   {mappedCount} / {totalCount}
                 </span>
               </div>
@@ -186,7 +186,7 @@ export default function GeocodingProgress({ pendingCount, totalCount, autoStart 
           {!isRunning && !isComplete && pendingCount > 0 && (
             <button
               onClick={runGeocoding}
-              className="w-full btn-linkedin py-2 text-sm flex items-center justify-center gap-2"
+              className="w-full py-2.5 text-sm flex items-center justify-center gap-2 bg-[#0a66c2] hover:bg-[#004182] text-white font-medium rounded-xl transition-colors"
             >
               <Globe className="w-4 h-4" />
               Start Auto-Mapping
@@ -195,13 +195,13 @@ export default function GeocodingProgress({ pendingCount, totalCount, autoStart 
 
           {/* Info Text */}
           {isRunning && (
-            <p className="text-xs text-[#666666] text-center">
+            <p className="text-xs text-white/40 text-center">
               You can continue using the app while mapping runs
             </p>
           )}
 
           {isComplete && failedCount > 0 && (
-            <p className="text-xs text-[#b0b0b0] text-center mb-2">
+            <p className="text-xs text-white/50 text-center mb-2">
               Some companies couldn&apos;t be located. Set locations manually in All Connections.
             </p>
           )}
@@ -209,7 +209,7 @@ export default function GeocodingProgress({ pendingCount, totalCount, autoStart 
           {isComplete && (
             <button
               onClick={() => setDismissed(true)}
-              className="w-full py-2 text-sm text-[#0a66c2] hover:underline"
+              className="w-full py-2 text-sm text-[#0a66c2] hover:text-[#70b5f9] transition-colors"
             >
               Dismiss
             </button>
